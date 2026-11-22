@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package interaction.v1;
+option go_package = "github.com/cosmorithm/FrameFlow/proto/interaction/v1;interactionv1";
+
+service InteractionService {
+  rpc BatchGetInteractions(BatchRequest) returns (BatchResponse);
+  rpc SetLike(MutationRequest) returns (MutationResponse);
+  rpc SetFavorite(MutationRequest) returns (MutationResponse);
+  rpc SetFollow(MutationRequest) returns (MutationResponse);
+  rpc SetCommentLike(MutationRequest) returns (MutationResponse);
+  rpc CreateComment(CreateCommentRequest) returns (Comment);
+  rpc ListComments(ListCommentsRequest) returns (ListCommentsResponse);
+  rpc ListFavorites(ListRequest) returns (ListResponse);
+  rpc ListLikes(ListRequest) returns (ListResponse);
+}
+
+message VideoRef {
+  uint64 video_id = 1;
+  uint64 author_id = 2;
+}
+
+message Interaction {
+  uint64 video_id = 1;
+  uint64 like_count = 2;
+  uint64 comment_count = 3;
+  bool liked = 4;
+  bool favorited = 5;
+  bool following = 6;
+}
+message BatchRequest {
+  uint64 viewer_id = 1;
+  repeated VideoRef videos = 2;
+}
+message BatchResponse {
+  repeated Interaction items = 1;
+}
+
+// target_id is a video, user or comment ID, depending on the RPC.
+message MutationRequest {
+  uint64 user_id = 1;
+  uint64 target_id = 2;
+  bool enabled = 3;
+}
+message MutationResponse {
+  bool enabled = 1;
+}
+
+message CreateCommentRequest {
+  uint64 user_id = 1;
+  uint64 video_id = 2;
+  uint64 parent_id = 3; // Zero for top-level comments.
+  string content = 4;
+}
+message Comment {
+  uint64 comment_id = 1;
+  uint64 video_id = 2;
+  uint64 author_id = 3;
+  uint64 parent_id = 4;
+  uint64 root_id = 5;
+  string content = 6;
+  string created_at = 7;
+  uint64 like_count = 8;
+  bool liked = 9;
+  uint64 reply_count = 10;
+  bool deleted = 11;
+}
+message ListCommentsRequest {
+  uint64 viewer_id = 1;
+  uint64 video_id = 2;
+  uint64 root_id = 3; // Zero for top-level comments; otherwise expand a thread.
+  string cursor = 4;
+  uint32 limit = 5;
+}
+message ListCommentsResponse {
+  repeated Comment items = 1;
+  string next_cursor = 2;
+}
+message ListRequest {
+  uint64 user_id = 1;
+  string cursor = 2;
+  uint32 limit = 3;
+}
+message ListResponse {
+  repeated uint64 video_ids = 1;
+  string next_cursor = 2;
+}

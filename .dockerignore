@@ -1,0 +1,6 @@
+.git
+.env
+.frameflow
+data
+web/node_modules
+web/dist

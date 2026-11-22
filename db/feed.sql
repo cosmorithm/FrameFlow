@@ -1,0 +1,46 @@
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(254) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  nickname VARCHAR(64) NOT NULL,
+  avatar_key VARCHAR(255),
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS videos (
+  video_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  author_id BIGINT UNSIGNED NOT NULL,
+  caption TEXT NOT NULL,
+  video_key VARCHAR(255) NOT NULL,
+  cover_key VARCHAR(255),
+  view_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  view_5s_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  status VARCHAR(16) NOT NULL DEFAULT 'published',
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  published_at DATETIME(3),
+  INDEX idx_feed (status,published_at,video_id),
+  FOREIGN KEY (author_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS tags (
+  tag_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(64) NOT NULL UNIQUE,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS video_tags (
+  video_id BIGINT UNSIGNED NOT NULL, tag_id BIGINT UNSIGNED NOT NULL,
+  PRIMARY KEY (video_id,tag_id), INDEX idx_tag_videos (tag_id,video_id),
+  FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES tags(tag_id)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash BINARY(32) PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL,
+  expires_at DATETIME(3) NOT NULL, INDEX idx_session_expiry(expires_at),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS video_watch_daily (
+  stat_date DATE NOT NULL, video_id BIGINT UNSIGNED NOT NULL, user_id BIGINT UNSIGNED NOT NULL,
+  watch_stage TINYINT UNSIGNED NOT NULL,
+  PRIMARY KEY (stat_date,video_id,user_id),
+  CONSTRAINT chk_stage CHECK(watch_stage IN (0,1,2)),
+  FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
